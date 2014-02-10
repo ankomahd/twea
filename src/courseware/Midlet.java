@@ -130,6 +130,8 @@ public class Midlet extends MIDlet implements CommandListener {
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
+        }else if(command == BACK && d==data){
+            switchCurrentScreen(lstMenu);
         }
         if (command == List.SELECT_COMMAND && d == lstMenu) {
             //list item selected. Do something
