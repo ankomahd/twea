@@ -26,8 +26,8 @@ import javax.microedition.midlet.*;
 public class Midlet extends MIDlet implements CommandListener {
 
     private Display display;
-    private Form submit_form, form2, data;
-    TextField index_no, phone_number;
+    private Form submit_form, grade_form, data;
+    TextField index_no, phone_number, checkGrd;
     ChoiceGroup ecommerce, mobileweb, networks;
     DateField date;
     private Vector storage;
@@ -37,10 +37,12 @@ public class Midlet extends MIDlet implements CommandListener {
     private static final Command NEXT = new Command("NEXT", Command.SCREEN, 2);
     private static final Command EXIT = new Command("EXIT", Command.EXIT, 1);
     private static final Command SAVE = new Command("SAVE", Command.OK, 1);
+    private static final Command SUBMIT = new Command("SUBMIT", Command.OK, 1);
 
     public Midlet(){
         homeScreen();
         firstForm();
+        checkGrades();
     }
     public void startApp() {
         display = Display.getDisplay(this);
@@ -53,6 +55,14 @@ public class Midlet extends MIDlet implements CommandListener {
         lstMenu = new List("Choose one", Choice.IMPLICIT, theList, null);
         lstMenu.addCommand(EXIT);
         lstMenu.setCommandListener(this);
+    }
+    private void checkGrades(){
+        grade_form = new Form("Check Grades");
+        checkGrd = new TextField("Index Number: ", "", 30, TextField.NUMERIC);
+        grade_form.append(checkGrd);
+        grade_form.addCommand(SUBMIT);
+        grade_form.addCommand(BACK);
+        grade_form.setCommandListener(this);   
     }
 
     private void firstForm(){
@@ -86,7 +96,9 @@ public class Midlet extends MIDlet implements CommandListener {
     public void commandAction(Command command, Displayable d) {
         if (command == EXIT) {
             showConfirmation("Confirmation", "Do you really want to exit?");
-        } 
+        } else if(command == BACK && d == grade_form){
+            switchCurrentScreen(lstMenu);
+        }
         if(command==List.SELECT_COMMAND && d== lstMenu){
             //list item selected. Do something
             int selected=lstMenu.getSelectedIndex();
@@ -94,11 +106,12 @@ public class Midlet extends MIDlet implements CommandListener {
                 case 0:
                     switchCurrentScreen(submit_form);
                     break;
-                default:
-                   // display.setCurrent(msg, lstMenu); //show my alert
+                case 1:
+                    switchCurrentScreen(grade_form); //show my alert
                     break;
             }  
         }
+        
     }
     
     protected void showConfirmation(String title, String text) {
