@@ -5,7 +5,11 @@
  */
 package courseware;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Vector;
+import javax.microedition.io.Connector;
+import javax.microedition.io.HttpConnection;
 import javax.microedition.lcdui.Alert;
 import javax.microedition.lcdui.AlertType;
 import javax.microedition.lcdui.Choice;
@@ -98,6 +102,12 @@ public class Midlet extends MIDlet implements CommandListener {
             showConfirmation("Confirmation", "Do you really want to exit?");
         } else if(command == BACK && d == grade_form){
             switchCurrentScreen(lstMenu);
+        }else if(command == SUBMIT && d==grade_form){
+            try {
+                getViaHttpConnection("");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
         if(command==List.SELECT_COMMAND && d== lstMenu){
             //list item selected. Do something
@@ -137,6 +147,53 @@ public class Midlet extends MIDlet implements CommandListener {
      
      private void switchCurrentScreen(Displayable displayable) {
         display.setCurrent(displayable);
+    }
+
+    private void getViaHttpConnection(String url)  throws IOException{
+        HttpConnection c = null;
+        InputStream is = null;
+        int rc;
+        
+        try{
+            c = (HttpConnection)Connector.open(url);
+            
+            //get Response
+            rc = c.getResponseCode();
+            if(rc != HttpConnection.HTTP_OK){
+                throw new IOException("HTTP response code: " + rc);
+            }
+            
+            is = c.openInputStream();
+            
+            //Get the contentType
+            String type = c.getType();
+            
+            //Get the Length and process the data
+            int len = (int)c.getLength();
+            if(len > 0){
+                int actual = 0;
+                int bytesread = 0;
+                byte[] data = new byte[len];
+                while((bytesread != len) && (actual != -1)){
+                    actual = is.read(data, bytesread, len - bytesread);
+                    bytesread += actual;
+                }
+            }else{
+                int ch;
+                while((ch = is.read()) != -1){
+                    
+                }
+            }
+            
+        }catch(ClassCastException e){
+            throw new IllegalArgumentException("Not an HTTP URL");
+        }finally {
+            if(is != null)
+                is.close();
+            if(c!= null)
+                c.close();
+        }
+        
     }
      
      
