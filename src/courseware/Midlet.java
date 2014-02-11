@@ -5,9 +5,11 @@
  */
 package courseware;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Calendar;
 import java.util.Vector;
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
@@ -100,7 +102,7 @@ public class Midlet extends MIDlet implements CommandListener {
         submit_form.append(date);
 
         submit_form.addCommand(BACK);
-        submit_form.addCommand(SAVE);
+        submit_form.addCommand(SUBMIT);
         submit_form.setCommandListener(this);
     }
 
@@ -130,8 +132,18 @@ public class Midlet extends MIDlet implements CommandListener {
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
-        }else if(command == BACK && d==data){
+        } else if (command == BACK && d == data) {
             switchCurrentScreen(lstMenu);
+        } else if (command == SUBMIT && d == submit_form) {
+            System.out.println("You have clicked submit");
+            try {
+                // getViaHttpConnection("http://localhost/mobile_web/data.php?index_no=" + checkGrd.getString());
+                saveDetails();
+                myAlert.setString("Submitted");
+                display.setCurrent(myAlert, lstMenu);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
         if (command == List.SELECT_COMMAND && d == lstMenu) {
             //list item selected. Do something
@@ -194,7 +206,7 @@ public class Midlet extends MIDlet implements CommandListener {
             data.append(new StringItem("Networks: ", info[2]));
             data.append(new StringItem("Ecommerce: ", info[3]));
             data.append(new StringItem("Phone Number: ", info[4]));
-            data.append(new StringItem("Date: ", info[5]));                     
+            data.append(new StringItem("Date: ", info[5]));
         } finally {
             if (is != null) {
                 is.close();
@@ -204,6 +216,51 @@ public class Midlet extends MIDlet implements CommandListener {
             }
             if (connection != null) {
                 connection.close();
+            }
+        }
+    }
+
+    private void saveDetails() throws IOException {
+        System.out.print("Hello");
+        HttpConnection httpConn = null;
+        String url = "http://localhost/jmobile/data.php";
+        InputStream is = null;
+        DataOutputStream os = null;
+
+        try {
+            // Open an HTTP Connection object
+            httpConn = (HttpConnection) Connector.open(url);
+            // Setup HTTP Request to POST
+            httpConn.setRequestMethod(HttpConnection.POST);
+            httpConn.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
+
+
+            os = new DataOutputStream (httpConn.openDataOutputStream());
+            
+            String params;
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(date.getDate());
+            String theDate = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH) + 1) + "-" + cal.get(Calendar.DAY_OF_MONTH);
+            System.out.println(theDate);
+            
+            params = "index_no=" + index_no.getString() + "&mobileweb="
+                    + mobileweb.getString(mobileweb.getSelectedIndex()) + "&networks="
+                    + networks.getString(networks.getSelectedIndex()) + "&ecommerce="
+                    + ecommerce.getString(ecommerce.getSelectedIndex()) + "&phone_number="
+                    + phone_number.getString() + "&date=" + theDate;
+
+            os.write(params.getBytes());
+            System.out.print(params);
+            os.close();
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+            if (os != null) {
+                os.close();
+            }
+            if (httpConn != null) {
+                httpConn.close();
             }
         }
     }
