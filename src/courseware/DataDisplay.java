@@ -35,7 +35,7 @@ public class DataDisplay extends MIDlet implements CommandListener {
     private Display display;
     private Form select_form;
     private ChoiceGroup choice;
-    String[] info;  
+    String[] info;
     Alert msg, myAlert;
     private static final Command BACK = new Command("BACK", Command.OK, 1);
     private static final Command EXIT = new Command("EXIT", Command.EXIT, 1);
@@ -49,7 +49,7 @@ public class DataDisplay extends MIDlet implements CommandListener {
         myAlert = new Alert("FYI");
         myAlert.setType(AlertType.INFO);
         myAlert.setTimeout(1000);
-   
+
     }
 
     public void startApp() {
@@ -68,12 +68,13 @@ public class DataDisplay extends MIDlet implements CommandListener {
         select_form.setCommandListener(this);
     }
 
-    public void startCanvas(){
+    public void startCanvas() {
         myCanvas = new usefulCanvas();
         myCanvas.addCommand(BACK);
         myCanvas.setCommandListener(this);
-        
+
     }
+
     public void pauseApp() {
     }
 
@@ -100,23 +101,24 @@ public class DataDisplay extends MIDlet implements CommandListener {
     public void commandAction(Command command, Displayable d) {
         if (command == EXIT) {
             showConfirmation("Confirmation", "Do you really want to exit?");
-        }else if(command == RETRIEVE){
+        } else if (command == RETRIEVE) {
             System.out.println("You have clicked retrieve");
             try {
-                getViaHttpConnection("http://localhost/jmobile/data.php?num_id=1");
+                getViaHttpConnection("http://localhost/jmobile/data.php?num_id=2");
                 myAlert.setString("Your data will be displayed shortly!");
-                display.setCurrent(myAlert, myCanvas);
                 myCanvas.setNumbers(values);
+                myCanvas.pieGraph();
+                switchCurrentScreen(myCanvas);
                 myCanvas.repaint();
             } catch (IOException ex) {
                 ex.printStackTrace();
-            }            
-        }else if(command == BACK && d == myCanvas){
+            }
+        } else if (command == BACK && d == myCanvas) {
             switchCurrentScreen(select_form);
         }
-        
+
     }
-    
+
     private void getViaHttpConnection(String url) throws IOException {
         StringBuffer stringBuffer = new StringBuffer();
         HttpConnection c = null;
@@ -126,7 +128,7 @@ public class DataDisplay extends MIDlet implements CommandListener {
         try {
             c = (HttpConnection) Connector.open(url);
 
-             // Getting the response code will open the connection,
+            // Getting the response code will open the connection,
             // send the request, and read the HTTP response headers.
             // The headers are stored until requested.
             rc = c.getResponseCode();
@@ -149,13 +151,13 @@ public class DataDisplay extends MIDlet implements CommandListener {
                     actual = is.read(datas, bytesread, len - bytesread);
                     bytesread += actual;
                 }
-                for(int i=0; i<datas.length; i++){
-                     stringBuffer.append((char) datas[i]);
+                for (int i = 0; i < datas.length; i++) {
+                    stringBuffer.append((char) datas[i]);
                 }
                 info = Split(stringBuffer.toString(), "#");
                 values = new int[info.length];
                 //Convert string to numbers
-                for(int i=0; i<info.length; i++){
+                for (int i = 0; i < info.length; i++) {
                     values[i] = Integer.parseInt(info[i]);
                 }
                 System.out.println(values[0]);
@@ -184,6 +186,7 @@ public class DataDisplay extends MIDlet implements CommandListener {
     private void switchCurrentScreen(Displayable displayable) {
         display.setCurrent(displayable);
     }
+
     public static String[] Split(String splitStr, String delimiter) {
         StringBuffer token = new StringBuffer();
         Vector tokens = new Vector();
@@ -243,12 +246,53 @@ class usefulCanvas extends Canvas {
     }
 
     public void paint(Graphics g) {
+         int width = getWidth();
+            int height = getHeight();
+             g.setColor(0x99B2FF);//set colour green
+            g.fillRect(0, 0, width, height); //fill full screen with red
         if (curDiagram == "table") { //implement the table drawing here 
 
         } else if (curDiagram == "pieGraph") {
 
-        } else if (curDiagram == "histogram") {
+            int colors[] = {0xFF0000, 0xA9E969, 0x00FFFF, 0xC675EC, 0x008800, 0x00C400};
+                 
+            double startAngle = 0, arcAngle = 0, sum = 0;
 
+            for (int i = 0; i < data.length; i++) {
+                sum += data[i];
+            }
+  
+            for (int i = 0; i < data.length; i++) {
+                arcAngle = (data[i] / sum) * 360.0;
+                g.setColor(colors[i]);
+                g.drawArc(90, 120, 60, 60, (int)startAngle, (int)arcAngle);
+                g.fillArc(90, 120, 60, 60, (int)startAngle, (int)arcAngle);
+                startAngle += arcAngle;
+            }
+        } else if (curDiagram == "histogram") {
+           
+            int barW = width / 8;
+            int curW = barW;
+            int barH = height / 15;
+            int curH = barH;
+
+            g.setColor(0x99B2FF);//set colour green
+            g.fillRect(0, 0, width, height); //fill full screen with red
+
+            g.setColor(0x0000FF); //blue
+            g.drawRect(barW, height - (barH * 4), barW, barH * data[0]);
+            g.fillRect(barW, height - (barH * 4), barW, barH * data[0]);
+            g.drawRect((curW += barW), height - (barH * 4), barW, barH * data[1]);
+            g.fillRect((curW += barW), height - (barH * 4), barW, barH * data[1]);
+
+//            g.setColor(0xFFFF00);
+//            g.drawArc(getWidth() - 60, getHeight() - 60, 40, 40, 0, 360);
+//            g.fillArc(getWidth() - 60, getHeight() - 60, 40, 40, 0, 360);
+//
+//            g.setColor(0xFF0000);
+//            g.drawArc(20, getHeight() - 60, 40, 40, 0, 180);
+//            g.fillArc(20, getHeight() - 60, 40, 40, 0, 180);
+//            g.drawImage(img, width / 2, height / 2, Graphics.VCENTER | Graphics.HCENTER);
         } else if (curDiagram == "lineGraph") {
 
         }
