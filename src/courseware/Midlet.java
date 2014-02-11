@@ -186,36 +186,61 @@ public class Midlet extends MIDlet implements CommandListener {
     }
 
     private void getViaHttpConnection(String url) throws IOException {
-        HttpConnection connection = null;
-        InputStream is = null;
-        OutputStream os = null;
         StringBuffer stringBuffer = new StringBuffer();
+        HttpConnection c = null;
+        InputStream is = null;
+        int rc;
 
         try {
-            connection = (HttpConnection) Connector.open(url);
-            connection.setRequestMethod(HttpConnection.GET);
-            os = connection.openOutputStream();
-            is = connection.openDataInputStream();
-            int ch;
-            while ((ch = is.read()) != -1) {
-                stringBuffer.append((char) ch);
+            c = (HttpConnection) Connector.open(url);
+
+             // Getting the response code will open the connection,
+            // send the request, and read the HTTP response headers.
+            // The headers are stored until requested.
+            rc = c.getResponseCode();
+            if (rc != HttpConnection.HTTP_OK) {
+                throw new IOException("HTTP response code: " + rc);
             }
-            info = Split(stringBuffer.toString(), "#");
-            data.append(new StringItem("Index Number: ", info[0]));
-            data.append(new StringItem("Mobile Web: ", info[1]));
-            data.append(new StringItem("Networks: ", info[2]));
-            data.append(new StringItem("Ecommerce: ", info[3]));
-            data.append(new StringItem("Phone Number: ", info[4]));
-            data.append(new StringItem("Date: ", info[5]));
+
+            is = c.openInputStream();
+
+            // Get the ContentType
+            String type = c.getType();
+
+            // Get the length and process the data
+            int len = (int) c.getLength();
+            if (len > 0) {
+                int actual = 0;
+                int bytesread = 0;
+                byte[] datas = new byte[len];
+                while ((bytesread != len) && (actual != -1)) {
+                    actual = is.read(datas, bytesread, len - bytesread);
+                    bytesread += actual;
+                }
+                for(int i=0; i<datas.length; i++){
+                     stringBuffer.append((char) datas[i]);
+                }
+                info = Split(stringBuffer.toString(), "#");
+                data.append(new StringItem("Index Number: ", info[0]));
+                data.append(new StringItem("Mobile Web: ", info[1]));
+                data.append(new StringItem("Networks: ", info[2]));
+                data.append(new StringItem("Ecommerce: ", info[3]));
+                data.append(new StringItem("Phone Number: ", info[4]));
+                data.append(new StringItem("Date: ", info[5]));
+            } else {
+                int ch;
+                while ((ch = is.read()) != -1) {
+
+                }
+            }
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Not an HTTP URL");
         } finally {
             if (is != null) {
                 is.close();
             }
-            if (os != null) {
-                os.close();
-            }
-            if (connection != null) {
-                connection.close();
+            if (c != null) {
+                c.close();
             }
         }
     }
@@ -232,17 +257,16 @@ public class Midlet extends MIDlet implements CommandListener {
             httpConn = (HttpConnection) Connector.open(url);
             // Setup HTTP Request to POST
             httpConn.setRequestMethod(HttpConnection.POST);
-            httpConn.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
+            httpConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
+            os = new DataOutputStream(httpConn.openDataOutputStream());
 
-            os = new DataOutputStream (httpConn.openDataOutputStream());
-            
             String params;
             Calendar cal = Calendar.getInstance();
             cal.setTime(date.getDate());
             String theDate = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH) + 1) + "-" + cal.get(Calendar.DAY_OF_MONTH);
             System.out.println(theDate);
-            
+
             params = "index_no=" + index_no.getString() + "&mobileweb="
                     + mobileweb.getString(mobileweb.getSelectedIndex()) + "&networks="
                     + networks.getString(networks.getSelectedIndex()) + "&ecommerce="
