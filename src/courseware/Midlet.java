@@ -47,6 +47,7 @@ public class Midlet extends MIDlet implements CommandListener {
     private static final Command EXIT = new Command("EXIT", Command.EXIT, 1);
     private static final Command SAVE = new Command("SAVE", Command.OK, 1);
     private static final Command SUBMIT = new Command("SUBMIT", Command.OK, 1);
+    private static final Command RETRIEVE = new Command("RETRIEVE", Command.OK, 1);
     StringBuffer result;
     String[] info;
 
@@ -79,8 +80,8 @@ public class Midlet extends MIDlet implements CommandListener {
         grade_form = new Form("Check Grades");
         checkGrd = new TextField("Index Number: ", "", 30, TextField.NUMERIC);
         grade_form.append(checkGrd);
-        grade_form.addCommand(SUBMIT);
         grade_form.addCommand(BACK);
+        grade_form.addCommand(RETRIEVE);
         grade_form.setCommandListener(this);
     }
 
@@ -123,7 +124,7 @@ public class Midlet extends MIDlet implements CommandListener {
             showConfirmation("Confirmation", "Do you really want to exit?");
         } else if (command == BACK && d == grade_form) {
             switchCurrentScreen(lstMenu);
-        } else if (command == SUBMIT && d == grade_form) {
+        } else if (command == RETRIEVE && d == grade_form) {
             System.out.println("You have clicked submit");
             try {
                 getViaHttpConnection("http://localhost/jmobile/data.php?index_no=" + checkGrd.getString());
@@ -132,7 +133,9 @@ public class Midlet extends MIDlet implements CommandListener {
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
-        } else if (command == BACK && d == data) {
+        }else if(command == BACK && d== submit_form){
+            switchCurrentScreen(lstMenu);
+        }else if (command == BACK && d == data) {
             switchCurrentScreen(lstMenu);
         } else if (command == SUBMIT && d == submit_form) {
             System.out.println("You have clicked submit");
@@ -276,6 +279,7 @@ public class Midlet extends MIDlet implements CommandListener {
             os.write(params.getBytes());
             System.out.print(params);
             os.close();
+            reset();
         } finally {
             if (is != null) {
                 is.close();
@@ -315,6 +319,12 @@ public class Midlet extends MIDlet implements CommandListener {
             splitArray[i] = (String) tokens.elementAt(i);
         }
         return splitArray;
+    }
+    
+    public void reset(){
+        index_no.setString(null);
+            phone_number.setString(null);
+            date.setDate(null);
     }
 
 }
