@@ -6,6 +6,10 @@
 package courseware;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Vector;
+import javax.microedition.io.Connector;
+import javax.microedition.io.HttpConnection;
 import javax.microedition.lcdui.Alert;
 import javax.microedition.lcdui.AlertType;
 import javax.microedition.lcdui.Canvas;
@@ -31,6 +35,7 @@ public class DataDisplay extends MIDlet implements CommandListener {
     private Display display;
     private Form select_form;
     private ChoiceGroup choice;
+    String[] info;  
     Alert msg, myAlert;
     private static final Command BACK = new Command("BACK", Command.OK, 1);
     private static final Command EXIT = new Command("EXIT", Command.EXIT, 1);
@@ -40,7 +45,11 @@ public class DataDisplay extends MIDlet implements CommandListener {
 
     DataDisplay() {
         homeScreen();
-        myCanvas = new usefulCanvas(values);
+        startCanvas();
+        myAlert = new Alert("FYI");
+        myAlert.setType(AlertType.INFO);
+        myAlert.setTimeout(1000);
+   
     }
 
     public void startApp() {
@@ -59,6 +68,12 @@ public class DataDisplay extends MIDlet implements CommandListener {
         select_form.setCommandListener(this);
     }
 
+    public void startCanvas(){
+        myCanvas = new usefulCanvas();
+        myCanvas.addCommand(BACK);
+        myCanvas.setCommandListener(this);
+        
+    }
     public void pauseApp() {
     }
 
@@ -86,7 +101,79 @@ public class DataDisplay extends MIDlet implements CommandListener {
         if (command == EXIT) {
             showConfirmation("Confirmation", "Do you really want to exit?");
         }else if(command == RETRIEVE){
-            
+            System.out.println("You have clicked retrieve");
+            try {
+                getViaHttpConnection("http://localhost/jmobile/data.php?num_id=1");
+                myAlert.setString("Your data will be displayed shortly!");
+                display.setCurrent(myAlert, myCanvas);
+                myCanvas.setNumbers(values);
+                myCanvas.repaint();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }            
+        }else if(command == BACK && d == myCanvas){
+            switchCurrentScreen(select_form);
+        }
+        
+    }
+    
+    private void getViaHttpConnection(String url) throws IOException {
+        StringBuffer stringBuffer = new StringBuffer();
+        HttpConnection c = null;
+        InputStream is = null;
+        int rc;
+
+        try {
+            c = (HttpConnection) Connector.open(url);
+
+             // Getting the response code will open the connection,
+            // send the request, and read the HTTP response headers.
+            // The headers are stored until requested.
+            rc = c.getResponseCode();
+            if (rc != HttpConnection.HTTP_OK) {
+                throw new IOException("HTTP response code: " + rc);
+            }
+
+            is = c.openInputStream();
+
+            // Get the ContentType
+            String type = c.getType();
+
+            // Get the length and process the data
+            int len = (int) c.getLength();
+            if (len > 0) {
+                int actual = 0;
+                int bytesread = 0;
+                byte[] datas = new byte[len];
+                while ((bytesread != len) && (actual != -1)) {
+                    actual = is.read(datas, bytesread, len - bytesread);
+                    bytesread += actual;
+                }
+                for(int i=0; i<datas.length; i++){
+                     stringBuffer.append((char) datas[i]);
+                }
+                info = Split(stringBuffer.toString(), "#");
+                values = new int[info.length];
+                //Convert string to numbers
+                for(int i=0; i<info.length; i++){
+                    values[i] = Integer.parseInt(info[i]);
+                }
+                System.out.println(values[0]);
+            } else {
+                int ch;
+                while ((ch = is.read()) != -1) {
+
+                }
+            }
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Not an HTTP URL");
+        } finally {
+            if (is != null) {
+                is.close();
+            }
+            if (c != null) {
+                c.close();
+            }
         }
     }
 
@@ -97,6 +184,33 @@ public class DataDisplay extends MIDlet implements CommandListener {
     private void switchCurrentScreen(Displayable displayable) {
         display.setCurrent(displayable);
     }
+    public static String[] Split(String splitStr, String delimiter) {
+        StringBuffer token = new StringBuffer();
+        Vector tokens = new Vector();
+        // split
+        char[] chars = splitStr.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            if (delimiter.indexOf(chars[i]) != -1) {
+                // we bumbed into a delimiter
+                if (token.length() > 0) {
+                    tokens.addElement(token.toString());
+                    token.setLength(0);
+                }
+            } else {
+                token.append(chars[i]);
+            }
+        }
+        // don't forget the "tail"...
+        if (token.length() > 0) {
+            tokens.addElement(token.toString());
+        }
+        // convert the vector into an array
+        String[] splitArray = new String[tokens.size()];
+        for (int i = 0; i < splitArray.length; i++) {
+            splitArray[i] = (String) tokens.elementAt(i);
+        }
+        return splitArray;
+    }
 }
 
 class usefulCanvas extends Canvas {
@@ -104,8 +218,7 @@ class usefulCanvas extends Canvas {
     private int[] data;
     private String curDiagram;
 
-    public usefulCanvas(int[] numbers) {
-        data = numbers;
+    public usefulCanvas() {
         curDiagram = "";
     }
 
