@@ -25,7 +25,6 @@ import javax.microedition.lcdui.Displayable;
 import javax.microedition.lcdui.Form;
 import javax.microedition.lcdui.List;
 import javax.microedition.lcdui.StringItem;
-import javax.microedition.lcdui.TextBox;
 import javax.microedition.lcdui.TextField;
 import javax.microedition.midlet.*;
 
@@ -39,17 +38,14 @@ public class Midlet extends MIDlet implements CommandListener {
     TextField index_no, phone_number, checkGrd;
     ChoiceGroup ecommerce, mobileweb, networks;
     DateField date;
-    private Vector storage;
     List lstMenu;
     Alert msg, myAlert;
     private static final Command BACK = new Command("BACK", Command.OK, 1);
-    private static final Command NEXT = new Command("NEXT", Command.SCREEN, 2);
     private static final Command EXIT = new Command("EXIT", Command.EXIT, 1);
-    private static final Command SAVE = new Command("SAVE", Command.OK, 1);
     private static final Command SUBMIT = new Command("SUBMIT", Command.OK, 1);
     private static final Command RETRIEVE = new Command("RETRIEVE", Command.OK, 1);
     StringBuffer result;
-    String[] info;
+    String[] info;  
 
     public Midlet() {
         homeScreen();
