@@ -21,7 +21,6 @@ import javax.microedition.lcdui.Display;
 import javax.microedition.lcdui.Displayable;
 import javax.microedition.lcdui.Form;
 import javax.microedition.lcdui.Graphics;
-import javax.microedition.lcdui.Image;
 import javax.microedition.lcdui.StringItem;
 import javax.microedition.midlet.*;
 
@@ -104,7 +103,7 @@ public class DataDisplay extends MIDlet implements CommandListener {
         } else if (command == RETRIEVE) {
             System.out.println("You have clicked retrieve");
             try {
-                getViaHttpConnection("http://localhost/jmobile/data.php?num_id=2");
+                getViaHttpConnection("http://localhost/jmobile/data.php?num_id=1");
                 myAlert.setString("Your data will be displayed shortly!");
                 myCanvas.setNumbers(values);
                 myCanvas.pieGraph();
@@ -230,7 +229,7 @@ class usefulCanvas extends Canvas {
     }
 
     public void lineGraph() {
-        curDiagram = "linegraph";
+        curDiagram = "lineGraph";
     }
 
     public void histogram() {
@@ -246,79 +245,84 @@ class usefulCanvas extends Canvas {
     }
 
     public void paint(Graphics g) {
-         int width = getWidth();
-            int height = getHeight();
-             g.setColor(0x99B2FF);//set colour green
-            g.fillRect(0, 0, width, height); //fill full screen with red
+        int width = getWidth();
+        int height = getHeight();
+        g.setColor(0x99B2FF);//set colour green
+        g.fillRect(0, 0, width, height); //fill full screen with red
         if (curDiagram == "table") { //implement the table drawing here 
 
         } else if (curDiagram == "pieGraph") {
 
             int colors[] = {0xFF0000, 0xA9E969, 0x00FFFF, 0xC675EC, 0x008800, 0x00C400};
-                 
+
             double startAngle = 0, arcAngle = 0, sum = 0;
 
             for (int i = 0; i < data.length; i++) {
                 sum += data[i];
             }
-  
+
             for (int i = 0; i < data.length; i++) {
                 arcAngle = (data[i] / sum) * 360.0;
                 g.setColor(colors[i]);
-                g.drawArc(90, 120, 60, 60, (int)startAngle, (int)arcAngle);
-                g.fillArc(90, 120, 60, 60, (int)startAngle, (int)arcAngle);
+                g.drawArc(90, 120, 60, 60, (int) startAngle, (int) arcAngle);
+                g.fillArc(90, 120, 60, 60, (int) startAngle, (int) arcAngle);
                 startAngle += arcAngle;
             }
         } else if (curDiagram == "histogram") {
-           
-            int barW = width / 8;
-            int curW = barW;
-            int barH = height / 15;
-            int curH = barH;
+            int colors[] = {0xFF0000, 0xA9E969, 0x00FFFF, 0xC675EC, 0x008800, 0x00C400};
+
+            int max = findMax();   //Find the maximum value's index within the data array
+            int barW = width / 8;   //bar Width
+            int barH = height / 20; //bar Height
 
             g.setColor(0x99B2FF);//set colour green
             g.fillRect(0, 0, width, height); //fill full screen with red
 
-            g.setColor(0x0000FF); //blue
-            g.drawRect(barW, height - (barH * 4), barW, barH * data[0]);
-            g.fillRect(barW, height - (barH * 4), barW, barH * data[0]);
-            g.drawRect((curW += barW), height - (barH * 4), barW, barH * data[1]);
-            g.fillRect((curW += barW), height - (barH * 4), barW, barH * data[1]);
+            //draw the rectangles.
+            for (int i = 0; i < data.length; i++) {
+                g.setColor(colors[i]);
+                g.drawRect(barW * (i + 1), (barH * (data[max] - data[i])) + 120, barW, (barH * data[i]));
+                g.fillRect(barW * (i + 1), (barH * (data[max] - data[i])) + 120, barW, (barH * data[i]));
+            }
+            
+            //Draw the Axis
+            g.setColor(0x003300);
+            g.drawLine(barW, barH * data[max] + 120, barW, barH); //draw green line top left to center
+            g.drawLine(barW, barH * data[max] + 120, barW * (data.length + 2), barH * data[max] + 120);
 
-//            g.setColor(0xFFFF00);
-//            g.drawArc(getWidth() - 60, getHeight() - 60, 40, 40, 0, 360);
-//            g.fillArc(getWidth() - 60, getHeight() - 60, 40, 40, 0, 360);
-//
-//            g.setColor(0xFF0000);
-//            g.drawArc(20, getHeight() - 60, 40, 40, 0, 180);
-//            g.fillArc(20, getHeight() - 60, 40, 40, 0, 180);
-//            g.drawImage(img, width / 2, height / 2, Graphics.VCENTER | Graphics.HCENTER);
         } else if (curDiagram == "lineGraph") {
+            int colors[] = {0xFF0000, 0xA9E969, 0x00FFFF, 0xC675EC, 0x008800, 0x00C400};
+            
+            int max = findMax();   //Find the maximum value's index within the data array
+            int barW = width / 8;   //line Width
+            int barH = height / 20; //line Height
 
+            g.setColor(0x339966);//set colour green
+            g.fillRect(0, 0, width, height); //fill full screen with red
+            
+            g.setColor(0x66FFFF);
+          
+            for (int i = 0; i < data.length; i++) {
+                if(i==4)
+                    break;
+                g.drawLine(barW * (i + 1), (barH * (data[max] - data[i])) + 120, barW * (i + 2), (barH * (data[max] - data[i+1])) + 120);
+            }
+            
+            //Draw Axis
+            g.setColor(0x003300);
+            g.drawLine(barW, barH * data[max] + 120, barW, barH); 
+            g.drawLine(barW, barH * data[max] + 120, barW * (data.length + 2), barH * data[max] + 120);
         }
-//        
-//        int width = getWidth();
-//        int height = getHeight();
-//        Image img = null;
-//        try {
-//            img = Image.createImage("/res/Pizza_1.jpg");
-//        //the file should be in a resource folder
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        g.setColor(0x339966);//set colour green
-//        g.fillRect(0, 0, width, height); //fill full screen with red
-//        g.setColor(0x0000FF); //blue
-//        g.drawRect(UP, UP, 40, 40);
-//        g.fillRect(UP, UP, 40, 40);
-//        
-//        g.setColor(0xFFFF00);
-//        g.drawArc(getWidth() - 60, getHeight() - 60, 40, 40, 0, 360);
-//        g.fillArc(getWidth() - 60, getHeight() - 60, 40, 40, 0, 360);
-//        
-//        g.setColor(0xFF0000);
-//        g.drawArc(20, getHeight() - 60, 40, 40, 0, 180);
-//        g.fillArc(20, getHeight() - 60, 40, 40, 0, 180);
-//        g.drawImage(img, width / 2, height / 2, Graphics.VCENTER | Graphics.HCENTER);
+    }
+
+    public int findMax() {
+        int max = 0;
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] > data[max]) {
+                max = i;
+            }
+        }
+
+        return max;
     }
 }
