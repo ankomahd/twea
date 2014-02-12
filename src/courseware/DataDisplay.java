@@ -60,7 +60,7 @@ public class DataDisplay extends MIDlet implements CommandListener {
     public void homeScreen() {
         select_form = new Form("Choose Data Display Method");
         choice = new ChoiceGroup("Display Method", Choice.POPUP, new String[]{"Pie Chart", "Line Graph", "Histogram", "Table"}, null);
-        select_form.append(new StringItem("Please choose a way to displaying: ", ""));
+        select_form.append(new StringItem("Choose a data display method ", ""));
         select_form.append(choice);
         select_form.addCommand(RETRIEVE);
         select_form.addCommand(EXIT);
@@ -101,12 +101,22 @@ public class DataDisplay extends MIDlet implements CommandListener {
         if (command == EXIT) {
             showConfirmation("Confirmation", "Do you really want to exit?");
         } else if (command == RETRIEVE) {
-            System.out.println("You have clicked retrieve");
+            //get the comboBox selection.
+            String selected = choice.getString(choice.getSelectedIndex());
             try {
                 getViaHttpConnection("http://localhost/jmobile/data.php?num_id=1");
                 myAlert.setString("Your data will be displayed shortly!");
                 myCanvas.setNumbers(values);
-                myCanvas.pieGraph();
+                
+                if(selected == "Pie Chart"){
+                    myCanvas.pieGraph();
+                }else if(selected == "Line Graph"){
+                    myCanvas.lineGraph();
+                }else if(selected == "Histogram"){
+                    myCanvas.histogram();
+                }else{
+                    myCanvas.table();
+                }
                 switchCurrentScreen(myCanvas);
                 myCanvas.repaint();
             } catch (IOException ex) {
