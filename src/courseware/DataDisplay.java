@@ -104,10 +104,12 @@ public class DataDisplay extends MIDlet implements CommandListener {
             //get the comboBox selection.
             String selected = choice.getString(choice.getSelectedIndex());
             try {
+               
                 getViaHttpConnection("http://localhost/jmobile/data.php?num_id=1");
+                System.out.println("You clicked it");
                 myAlert.setString("Your data will be displayed shortly!");
                 myCanvas.setNumbers(values);
-                
+                 System.out.println("You clicked it");
                 if(selected == "Pie Chart"){
                     myCanvas.pieGraph();
                 }else if(selected == "Line Graph"){
@@ -186,6 +188,7 @@ public class DataDisplay extends MIDlet implements CommandListener {
                 c.close();
             }
         }
+            System.out.println("You are in the url it");
     }
 
     private void closeAlert() {
@@ -247,6 +250,7 @@ class usefulCanvas extends Canvas {
     }
 
     public void pieGraph() {
+        System.out.println("You clicked piwGraph");
         curDiagram = "pieGraph";
     }
 
@@ -257,10 +261,22 @@ class usefulCanvas extends Canvas {
     public void paint(Graphics g) {
         int width = getWidth();
         int height = getHeight();
+        int x=0, y =10;
         g.setColor(0x99B2FF);//set colour green
         g.fillRect(0, 0, width, height); //fill full screen with red
-        if (curDiagram == "table") { //implement the table drawing here 
-
+       
+        if (curDiagram == "table") { //implement the table drawing here
+            g.setColor(0x000000);//set colour green
+            for (int i = 0; i < data.length; i++) {
+               StringItem s = new StringItem(" Number", "" + (i+1) + "   " + data[i]);
+               g.drawLine(5, 10, 115 , 10);
+               g.drawLine(4, 10, 4, 110);
+               g.drawLine(90, 10, 90, 110);
+               g.drawLine(115, 10, 115, 110);
+               g.drawString(s.getLabel() + " " + s.getText(), x, y, 0);
+               g.drawLine(x=5, y+21, x+110 , y+21);
+               y=y+20;
+           }
         } else if (curDiagram == "pieGraph") {
 
             int colors[] = {0xFF0000, 0xA9E969, 0x00FFFF, 0xC675EC, 0x008800, 0x00C400};
@@ -274,8 +290,8 @@ class usefulCanvas extends Canvas {
             for (int i = 0; i < data.length; i++) {
                 arcAngle = (data[i] / sum) * 360.0;
                 g.setColor(colors[i]);
-                g.drawArc(90, 120, 60, 60, (int) startAngle, (int) arcAngle);
-                g.fillArc(90, 120, 60, 60, (int) startAngle, (int) arcAngle);
+                g.drawArc(40, 90, 120, 120, (int) startAngle, (int) arcAngle);
+                g.fillArc(40, 90, 120, 120, (int) startAngle, (int) arcAngle);
                 startAngle += arcAngle;
             }
         } else if (curDiagram == "histogram") {
